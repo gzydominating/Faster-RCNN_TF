@@ -9,8 +9,12 @@
 
 __sets = {}
 
-import networks.VGGnet_train
-import networks.VGGnet_test
+from .VGGnet_test import VGGnet_test
+from .VGGnet_train import VGGnet_train
+from .Resnet50_test import Resnet50_test
+from .Resnet50_train import Resnet50_train
+from .Resnet101_test import Resnet101_test
+from .Resnet101_train import Resnet101_train
 import pdb
 import tensorflow as tf
 
@@ -21,15 +25,29 @@ import tensorflow as tf
 
 def get_network(name):
     """Get a network by name."""
-    #if not __sets.has_key(name):
-    #    raise KeyError('Unknown dataset: {}'.format(name))
-    #return __sets[name]
-    if name.split('_')[1] == 'test':
-       return networks.VGGnet_test()
-    elif name.split('_')[1] == 'train':
-       return networks.VGGnet_train()
+    if name.split('_')[0] == 'VGGnet':
+        if name.split('_')[1] == 'test':
+            return VGGnet_test()
+        elif name.split('_')[1] == 'train':
+            return VGGnet_train()
+        else:
+            raise KeyError('Unknown dataset: {}'.format(name))
+    elif name.split('_')[0] == 'Resnet50':
+        if name.split('_')[1] == 'test':
+            return Resnet50_test()
+        elif name.split('_')[1] == 'train':
+            return Resnet50_train()
+        else:
+            raise KeyError('Unknown dataset: {}'.format(name))
+    elif name.split('_')[0] == 'Resnet101':
+        if name.split('_')[1] == 'test':
+            return Resnet50_test()
+        elif name.split('_')[1] == 'train':
+            return Resnet50_train()
+        else:
+            raise KeyError('Unknown dataset: {}'.format(name))
     else:
-       raise KeyError('Unknown dataset: {}'.format(name))
+        raise KeyError('Unknown dataset: {}'.format(name))
     
 
 def list_networks():
