@@ -7,6 +7,7 @@ from utils.timer import Timer
 import matplotlib.pyplot as plt
 import numpy as np
 import os, sys, cv2
+import random
 import argparse
 from networks.factory import get_network
 
@@ -21,7 +22,7 @@ CLASSES = ('__background__',
 
 #CLASSES = ('__background__','person','bike','motorbike','car','bus')
 
-def vis_detections(im, class_name, dets,ax, thresh=0.5):
+def vis_detections(im, class_name, dets, ax, color, thresh=0.5):
     """Draw detected bounding boxes."""
     inds = np.where(dets[:, -1] >= thresh)[0]
     if len(inds) == 0:
@@ -35,17 +36,17 @@ def vis_detections(im, class_name, dets,ax, thresh=0.5):
             plt.Rectangle((bbox[0], bbox[1]),
                           bbox[2] - bbox[0],
                           bbox[3] - bbox[1], fill=False,
-                          edgecolor='red', linewidth=3.5)
-            )
+                          edgecolor=color, linewidth=3.5)
+        )
         ax.text(bbox[0], bbox[1] - 2,
                 '{:s} {:.3f}'.format(class_name, score),
-                bbox=dict(facecolor='blue', alpha=0.5),
+                bbox=dict(facecolor=color, alpha=0.5),
                 fontsize=14, color='white')
 
     ax.set_title(('{} detections with '
                   'p({} | box) >= {:.1f}').format(class_name, class_name,
                                                   thresh),
-                  fontsize=14)
+                 fontsize=14)
     plt.axis('off')
     plt.tight_layout()
     plt.draw()
@@ -65,7 +66,7 @@ def demo(sess, net, image_name):
     scores, boxes = im_detect(sess, net, im)
     timer.toc()
     print ('Detection took {:.3f}s for '
-           '{:d} object proposals').format(timer.total_time, boxes.shape[0])
+           '{:d} object proposals'.format(timer.total_time, boxes.shape[0]))
 
     # Visualize detections for each class
     im = im[:, :, (2, 1, 0)]
@@ -74,15 +75,18 @@ def demo(sess, net, image_name):
 
     CONF_THRESH = 0.8
     NMS_THRESH = 0.3
+    colors = dict()
     for cls_ind, cls in enumerate(CLASSES[1:]):
-        cls_ind += 1 # because we skipped background
-        cls_boxes = boxes[:, 4*cls_ind:4*(cls_ind + 1)]
+        cls_ind += 1  # because we skipped background
+        if cls_ind not in colors:
+            colors[cls_ind] = (random.random(), random.random(), random.random())
+        cls_boxes = boxes[:, 4 * cls_ind:4 * (cls_ind + 1)]
         cls_scores = scores[:, cls_ind]
         dets = np.hstack((cls_boxes,
                           cls_scores[:, np.newaxis])).astype(np.float32)
         keep = nms(dets, NMS_THRESH)
         dets = dets[keep, :]
-        vis_detections(im, cls, dets, ax, thresh=CONF_THRESH)
+        vis_detections(im, cls, dets, ax,color=colors[cls_ind] , thresh=CONF_THRESH)
 
 def parse_args():
     """Parse input arguments."""
@@ -95,7 +99,7 @@ def parse_args():
     parser.add_argument('--net', dest='demo_net', help='Network to use [vgg16]',
                         default='VGGnet_test')
     parser.add_argument('--model', dest='model', help='Model path',
-                        default=' ')
+                        default='./VGGnet_fast_rcnn_iter_70000.ckpt')
 
     args = parser.parse_args()
 
@@ -113,25 +117,24 @@ if __name__ == '__main__':
     # load network
     net = get_network(args.demo_net)
     # load model
-    saver = tf.train.Saver(write_version=tf.train.SaverDef.V1)
+    saver = tf.train.Saver()
     saver.restore(sess, args.model)
    
     #sess.run(tf.initialize_all_variables())
 
-    print '\n\nLoaded network {:s}'.format(args.model)
+    print( '\n\nLoaded network {:s}'.format(args.model))
 
     # Warmup on a dummy image
     im = 128 * np.ones((300, 300, 3), dtype=np.uint8)
-    for i in xrange(2):
+    for i in range(2):
         _, _= im_detect(sess, net, im)
 
-    im_names = ['000456.jpg', '000542.jpg', '001150.jpg',
-                '001763.jpg', '004545.jpg']
+    im_names = ['001763.jpg', '004545.jpg']
 
 
     for im_name in im_names:
-        print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-        print 'Demo for data/demo/{}'.format(im_name)
+        print( '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        print( 'Demo for data/demo/{}'.format(im_name))
         demo(sess, net, im_name)
 
     plt.show()
