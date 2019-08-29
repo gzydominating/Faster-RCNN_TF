@@ -23,6 +23,7 @@ limitations under the License.
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/tensor_shape.h"
 #include "work_sharder.h"
+#include "tensorflow/core/framework/shape_inference.h"
 
 using namespace tensorflow;
 typedef Eigen::ThreadPoolDevice CPUDevice;
@@ -35,7 +36,19 @@ REGISTER_OP("RoiPool")
     .Input("bottom_data: T")
     .Input("bottom_rois: T")
     .Output("top_data: T")
-    .Output("argmax: int32");
+    .Output("argmax: int32")
+	.SetShapeFn([](::tensorflow::shape_inference::InferenceContext* c) {
+      int pooled_height;
+      int pooled_width;
+      c->GetAttr("pooled_height", &pooled_height);
+      c->GetAttr("pooled_width", &pooled_width);
+      auto pooled_height_h = c->MakeDim(pooled_height);
+      auto pooled_width_h = c->MakeDim(pooled_width);
+
+      auto output_shape = c->MakeShape({ c->Dim(c->input(1), 0), pooled_height_h, pooled_width_h, c->Dim(c->input(0), 3) });
+      c->set_output(0, output_shape);
+      return Status::OK();
+    });
 
 REGISTER_OP("RoiPoolGrad")
     .Attr("T: {float, double}")
