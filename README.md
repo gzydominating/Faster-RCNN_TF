@@ -1,7 +1,7 @@
 # Faster-RCNN_TF
 
-Add Resnet50 and Resnet101 from [here](https://github.com/CharlesShang/TFFRCNN/tree/master/lib/networks) ,pretrain model
-and trained model is [here](https://drive.google.com/file/d/0B_xFdh9onPagSWU1ZTAxUTZkZTQ/view) and [here](https://drive.google.com/file/d/0B_xFdh9onPagbXk1b0FIeDRJaU0/view)
+Add Resnet50 and Resnet101 from [here](https://github.com/CharlesShang/TFFRCNN/tree/master/lib/networks), pretrain model
+and trained model is [here](https://drive.google.com/file/d/0B_xFdh9onPagSWU1ZTAxUTZkZTQ/view) and [here](https://drive.google.com/file/d/0B_xFdh9onPagbXk1b0FIeDRJaU0/view).
 
 This is an experimental Tensorflow implementation of Faster RCNN - a convnet for object detection with a region proposal network.
 For details about R-CNN please refer to the paper [Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks](http://arxiv.org/pdf/1506.01497v3.pdf) by Shaoqing Ren, Kaiming He, Ross Girshick, Jian Sun.
