@@ -5,7 +5,7 @@
 # Written by miraclebiu
 # --------------------------------------------------------
 import tensorflow as tf
-from .network import Network
+from networks.network import Network
 #from ..fast_rcnn.config import cfg
 
 class Resnet101_test(Network):
