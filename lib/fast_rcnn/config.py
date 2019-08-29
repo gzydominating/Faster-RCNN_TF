@@ -19,6 +19,7 @@ Most tools in $ROOT/tools take a --cfg option to specify an override file.
 import os
 import os.path as osp
 import numpy as np
+from time import strftime, localtime
 from distutils import spawn
 # `pip install easydict` if you don't have it
 from easydict import EasyDict as edict
@@ -35,6 +36,7 @@ cfg = __C
 __C.TRAIN = edict()
 #__C.NET_NAME = 'VGGnet'
 # learning rate
+__C.TRAIN.WEIGHT_DECAY = 0.0005
 __C.TRAIN.LEARNING_RATE = 0.001
 __C.TRAIN.MOMENTUM = 0.9
 __C.TRAIN.GAMMA = 0.1
@@ -90,11 +92,11 @@ __C.TRAIN.BBOX_REG = True
 __C.TRAIN.BBOX_THRESH = 0.5
 
 # Iterations between snapshots
-__C.TRAIN.SNAPSHOT_ITERS = 5000
+__C.TRAIN.SNAPSHOT_ITERS = 100
 
 # solver.prototxt specifies the snapshot path prefix, this adds an optional
 # infix to yield the path: <prefix>[_<infix>]_iters_XYZ.caffemodel
-__C.TRAIN.SNAPSHOT_PREFIX = 'VGGnet_fast_rcnn'
+__C.TRAIN.SNAPSHOT_PREFIX = 'Resnet101_faster_rcnn'
 __C.TRAIN.SNAPSHOT_INFIX = ''
 
 # Use a prefetch thread in roi_data_layer.layer
@@ -229,6 +231,7 @@ __C.MATLAB = 'matlab'
 
 # Place outputs under an experiments directory
 __C.EXP_DIR = 'default'
+__C.LOG_DIR = 'default'
 
 
 if spawn.find_executable("nvcc"):
@@ -255,6 +258,18 @@ def get_output_dir(imdb, weights_filename):
         os.makedirs(outdir)
     return outdir
 
+def get_log_dir(imdb):
+    """Return the directory where experimental artifacts are placed.
+    If the directory does not exist, it is created.
+    A canonical path is built using the name from an imdb and a network
+    (if not None).
+    """
+    log_dir = osp.abspath(\
+        osp.join(__C.ROOT_DIR, 'logs', __C.LOG_DIR, imdb.name, strftime("%Y-%m-%d-%H-%M-%S", localtime())))
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    return log_dir
+
 def _merge_a_into_b(a, b):
     """Merge config dictionary a into config dictionary b, clobbering the
     options in b whenever they are also specified in a.
@@ -262,9 +277,9 @@ def _merge_a_into_b(a, b):
     if type(a) is not edict:
         return
 
-    for k, v in a.iteritems():
+    for k, v in a.items():
         # a must specify keys that are in b
-        if not b.has_key(k):
+        if k not in b:
             raise KeyError('{} is not a valid config key'.format(k))
 
         # the types must match, too
@@ -303,10 +318,10 @@ def cfg_from_list(cfg_list):
         key_list = k.split('.')
         d = __C
         for subkey in key_list[:-1]:
-            assert d.has_key(subkey)
+            assert subkey in d
             d = d[subkey]
         subkey = key_list[-1]
-        assert d.has_key(subkey)
+        assert subkey in d
         try:
             value = literal_eval(v)
         except:
